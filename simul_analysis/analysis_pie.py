@@ -32,7 +32,11 @@ for job in jobs:
     attemptnr = job["attemptnr"]
     jobstatus = job["jobstatus"]
     jobsubstatus = job["jobsubstatus"]
-    if jobsubstatus == "": jobsubstatus = 'None'
+    if jobsubstatus == "" or jobsubstatus == None: jobsubstatus = 'None'
+    piloterrorcode = job["piloterrorcode"]
+    if piloterrorcode == "" or piloterrorcode == None: piloterrorcode = 'None'
+    taskbuffererrorcode =job["piloterrorcode"]
+    if taskbuffererrorcode == "" or taskbuffererrorcode == None: taskbuffererrorcode = 'None'
     walltime = job['durationsec']
 
     ##if attemptnr > 30 and es == 'ordinary':
@@ -50,6 +54,8 @@ for job in jobs:
     ##    print job['pandaid']
     ##
 
+    ##if jobstatus=='closed' and jobsubstatus == 'es_unused' and walltime > 0:
+    ##    print job['pandaid']
 
     if job["starttime"] and job['actualcorecount']:
         corecount = job['actualcorecount']
@@ -69,6 +75,23 @@ for job in jobs:
         report[es]['jobstatus'] = {}
     if jobstatus not in report[es]['jobstatus']:
         report[es]['jobstatus'][jobstatus] = {'jobs': 0, 'walltime': 0, 'walltime_time_core': 0}
+
+    if 'sites' not in report[es]['jobstatus'][jobstatus]:
+        report[es]['jobstatus'][jobstatus]['sites'] = {}
+    if 'jobsubstatus' not in report[es]['jobstatus'][jobstatus]:
+        report[es]['jobstatus'][jobstatus]['jobsubstatus'] = {}
+    if 'piloterrorcode' not in report[es]['jobstatus'][jobstatus]:
+        report[es]['jobstatus'][jobstatus]['piloterrorcode'] = {}
+    if 'taskbuffererrorcode' not in report[es]['jobstatus'][jobstatus]:
+        report[es]['jobstatus'][jobstatus]['taskbuffererrorcode'] = {}
+    if computingsite not in report[es]['jobstatus'][jobstatus]['sites']:
+        report[es]['jobstatus'][jobstatus]['sites'][computingsite] = {'jobs': 0, 'walltime': 0, 'walltime_time_core': 0}
+    if jobsubstatus not in report[es]['jobstatus'][jobstatus]['jobsubstatus']:
+        report[es]['jobstatus'][jobstatus]['jobsubstatus'][jobsubstatus] = {'jobs': 0, 'walltime': 0, 'walltime_time_core': 0}
+    if piloterrorcode not in report[es]['jobstatus'][jobstatus]['piloterrorcode']:
+        report[es]['jobstatus'][jobstatus]['piloterrorcode'][piloterrorcode] = {'jobs': 0, 'walltime': 0, 'walltime_time_core': 0}
+    if taskbuffererrorcode not in report[es]['jobstatus'][jobstatus]['taskbuffererrorcode']:
+        report[es]['jobstatus'][jobstatus]['taskbuffererrorcode'][taskbuffererrorcode] = {'jobs': 0, 'walltime': 0, 'walltime_time_core': 0}
 
     if 'attemptnr' not in report[es]:
         report[es]['attemptnr'] = {}
@@ -91,6 +114,22 @@ for job in jobs:
     report[es]['jobstatus'][jobstatus]['jobs'] += 1
     report[es]['jobstatus'][jobstatus]['walltime'] += walltime
     report[es]['jobstatus'][jobstatus]['walltime_time_core'] += walltime * corecount
+
+    report[es]['jobstatus'][jobstatus]['sites'][computingsite]['jobs'] += 1
+    report[es]['jobstatus'][jobstatus]['sites'][computingsite]['walltime'] += walltime
+    report[es]['jobstatus'][jobstatus]['sites'][computingsite]['walltime_time_core'] += walltime * corecount
+
+    report[es]['jobstatus'][jobstatus]['jobsubstatus'][jobsubstatus]['jobs'] += 1
+    report[es]['jobstatus'][jobstatus]['jobsubstatus'][jobsubstatus]['walltime'] += walltime
+    report[es]['jobstatus'][jobstatus]['jobsubstatus'][jobsubstatus]['walltime_time_core'] += walltime * corecount
+
+    report[es]['jobstatus'][jobstatus]['piloterrorcode'][piloterrorcode]['jobs'] += 1
+    report[es]['jobstatus'][jobstatus]['piloterrorcode'][piloterrorcode]['walltime'] += walltime
+    report[es]['jobstatus'][jobstatus]['piloterrorcode'][piloterrorcode]['walltime_time_core'] += walltime * corecount
+
+    report[es]['jobstatus'][jobstatus]['taskbuffererrorcode'][taskbuffererrorcode]['jobs'] += 1
+    report[es]['jobstatus'][jobstatus]['taskbuffererrorcode'][taskbuffererrorcode]['walltime'] += walltime
+    report[es]['jobstatus'][jobstatus]['taskbuffererrorcode'][taskbuffererrorcode]['walltime_time_core'] += walltime * corecount
 
     report[es]['attemptnr'][attemptnr]['jobs'] += 1
     report[es]['attemptnr'][attemptnr]['walltime'] += walltime
@@ -148,6 +187,99 @@ for es in report:
     title = "%s simul Jobs walltime_time_core, by jobstatus" % es
     draw_pie(labels, sizes, colors, title)
 
+
+##### group by jobstatus, jobsubstatus
+for es in report:
+    for jobstatus in report[es]['jobstatus']:
+        labels = []
+        sizes = []
+        for jobsubstatus in report[es]['jobstatus'][jobstatus]['jobsubstatus']:
+            labels.append(jobsubstatus)
+            sizes.append(report[es]['jobstatus'][jobstatus]['jobsubstatus'][jobsubstatus]['jobs'])
+        colors = defined_colors[:len(sizes)]
+        title = "%s simul %s Jobs count, by jobsubstatus" % (es, jobstatus)
+        draw_pie(labels, sizes, colors, title)
+
+for es in report:
+    for jobstatus in report[es]['jobstatus']:
+        labels = []
+        sizes = []
+        for jobsubstatus in report[es]['jobstatus'][jobstatus]['jobsubstatus']:
+            labels.append(jobsubstatus)
+            sizes.append(report[es]['jobstatus'][jobstatus]['jobsubstatus'][jobsubstatus]['walltime_time_core'])
+        colors = defined_colors[:len(sizes)]
+        title = "%s simul %s Jobs walltime_time_core, by jobsubstatus" % (es, jobstatus)
+        draw_pie(labels, sizes, colors, title)
+
+
+#### group by jobstatus, computingsite
+for es in report:
+    for jobstatus in report[es]['jobstatus']:
+        labels = []
+        sizes = []
+        for site in report[es]['jobstatus'][jobstatus]['sites']:
+            labels.append(site)
+            sizes.append(report[es]['jobstatus'][jobstatus]['sites'][site]['jobs'])
+        colors = defined_colors[:len(sizes)]
+        title = "%s simul %s Jobs count, by computingsite" % (es, jobstatus)
+        draw_pie(labels, sizes, colors, title)
+
+for es in report:
+    for jobstatus in report[es]['jobstatus']:
+        labels = []
+        sizes = []
+        for site in report[es]['jobstatus'][jobstatus]['sites']:
+            labels.append(site)
+            sizes.append(report[es]['jobstatus'][jobstatus]['sites'][site]['walltime_time_core'])
+        colors = defined_colors[:len(sizes)]
+        title = "%s simul %s Jobs walltime_time_core, by computingsite" % (es, jobstatus)
+        draw_pie(labels, sizes, colors, title)
+
+#### group by jobstatus, piloterrorcode
+for es in report:
+    for jobstatus in report[es]['jobstatus']:
+        labels = []
+        sizes = []
+        for piloterrorcode in report[es]['jobstatus'][jobstatus]['piloterrorcode']:
+            labels.append(piloterrorcode)
+            sizes.append(report[es]['jobstatus'][jobstatus]['piloterrorcode'][piloterrorcode]['jobs'])
+        colors = defined_colors[:len(sizes)]
+        title = "%s simul %s Jobs count, by piloterrorcode" % (es, jobstatus)
+        draw_pie(labels, sizes, colors, title)
+
+for es in report:
+    for jobstatus in report[es]['jobstatus']:
+        labels = []
+        sizes = []
+        for piloterrorcode in report[es]['jobstatus'][jobstatus]['piloterrorcode']:
+            labels.append(piloterrorcode)
+            sizes.append(report[es]['jobstatus'][jobstatus]['piloterrorcode'][piloterrorcode]['walltime_time_core'])
+        colors = defined_colors[:len(sizes)]
+        title = "%s simul %s Jobs walltime_time_core, by piloterrorcode" % (es, jobstatus)
+        draw_pie(labels, sizes, colors, title)
+
+#### group by jobstatus, taskbuffererrorcode
+for es in report:
+    for jobstatus in report[es]['jobstatus']:
+        labels = []
+        sizes = []
+        for taskbuffererrorcode in report[es]['jobstatus'][jobstatus]['taskbuffererrorcode']:
+            labels.append(taskbuffererrorcode)
+            sizes.append(report[es]['jobstatus'][jobstatus]['taskbuffererrorcode'][taskbuffererrorcode]['jobs'])
+        colors = defined_colors[:len(sizes)]
+        title = "%s simul %s Jobs count, by taskbuffererrorcode" % (es, jobstatus)
+        draw_pie(labels, sizes, colors, title)
+
+for es in report:
+    for jobstatus in report[es]['jobstatus']:
+        labels = []
+        sizes = []
+        for taskbuffererrorcode in report[es]['jobstatus'][jobstatus]['taskbuffererrorcode']:
+            labels.append(taskbuffererrorcode)
+            sizes.append(report[es]['jobstatus'][jobstatus]['taskbuffererrorcode'][taskbuffererrorcode]['walltime_time_core'])
+        colors = defined_colors[:len(sizes)]
+        title = "%s simul %s Jobs walltime_time_core, by taskbuffererrorcode" % (es, jobstatus)
+        draw_pie(labels, sizes, colors, title)
 
 ##### group by attemptnr
 for es in report:
